@@ -310,7 +310,7 @@ void MainWindow::prevState() {
 
 void MainWindow:: numClick() {
     QPushButton *btn = (QPushButton *) sender();
-
+    qDebug() << "Num prev: " << state;
     switch (state) {
         case REAL_NO_NUMBER:
             ui->lbl_number->setText(btn->text());
@@ -357,6 +357,7 @@ void MainWindow:: numClick() {
         default:
             qDebug() << "Adding number on wrong state!";
     }
+    qDebug() << "Num curr:" << state;
 }
 
 
@@ -471,6 +472,8 @@ void MainWindow::on_btn_equal_clicked() {
 void MainWindow::on_btn_delete_clicked() {
     popLabel();
 
+    qDebug() << state;
+
     switch (state) {
         case REAL_NO_NUMBER:
             qDebug() << "Trying to go deeper than None!";
@@ -495,12 +498,28 @@ void MainWindow::on_btn_delete_clicked() {
             break;
 
         case REAL_DOT_PART:
-            if (peekLabel() == ".")
+            if (ui->lbl_number->text().length() == 0) {
                 prevState();
+                prevState();
+                prevState();
+                prevState();
+            }
+            else if (peekLabel() == ".")
+                prevState();
+            else if (peekLabel() == "-") {
+                prevState();
+                prevState();
+                prevState();
+            }
+
             break;
 
         case IMAG_NO_NUMBER:
                 prevState();
+                if (ui->lbl_number->text().indexOf('.') == -1) {
+                    prevState();
+                    prevState();
+                }
             break;
 
         case IMAG_PART:
@@ -515,19 +534,38 @@ void MainWindow::on_btn_delete_clicked() {
         case IMAG_DOT_PART:
             if (peekLabel() == ".")
                 prevState();
+            else if (peekLabel() == "-" || peekLabel() == "+") {
+                prevState();
+                prevState();
+                prevState();
+            }
             break;
 
         case NEXT_COMPLEX_OP:
             prevState();
+            if (ui->lbl_number->text().indexOf('.') == -1
+                     || ((ui->lbl_number->text().count('.') == 1) && ((ui->lbl_number->text().indexOf('+') < ui->lbl_number->text().indexOf('.'))))
+                     || ((ui->lbl_number->text().count('.') == 1) && ((ui->lbl_number->text().indexOf('-') < ui->lbl_number->text().indexOf('.'))))) {
+                prevState();
+                prevState();
+            }
             break;
 
         case EQUALITY:
             prevState();
+            if (ui->lbl_number->text().indexOf('.') == -1
+                     || ((ui->lbl_number->text().count('.') == 1) && ((ui->lbl_number->text().indexOf('+') < ui->lbl_number->text().indexOf('.'))))
+                     || ((ui->lbl_number->text().count('.') == 1) && ((ui->lbl_number->text().indexOf('-') < ui->lbl_number->text().indexOf('.'))))) {
+                prevState();
+                prevState();
+            }
             break;
 
         default:
             qDebug() << "Unknown state to delete value";
     }
+
+    qDebug() << state;
 }
 
 
