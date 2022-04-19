@@ -55,6 +55,7 @@ private:
     std::complex<double> first_complex, second_complex;
 
     bool is_first;
+    bool zero_state;
 
     void appendLabel(QString str);
     void popLabel();
