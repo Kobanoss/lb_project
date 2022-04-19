@@ -104,6 +104,7 @@ void MainWindow::switchButtonsState() {
             ui->btn_delete->setEnabled(false);
             ui->btn_equal->setEnabled(false);
             ui->btn_dot->setEnabled(false);
+            zero_state = false;
             break;
 
         case ONLY_REAL_SIGN:
@@ -314,16 +315,25 @@ void MainWindow:: numClick() {
     switch (state) {
         case REAL_NO_NUMBER:
             ui->lbl_number->setText(btn->text());
+            if (btn->text() == "0")
+                zero_state = true;
             nextState();
             nextState();
             break;
 
         case ONLY_REAL_SIGN:
+            if (btn->text() == "0")
+                zero_state = true;
             nextState();
             appendLabel(btn->text());
             break;
 
         case REAL_PART:
+            if (zero_state && btn->text() == "0")
+                break;
+            else if (zero_state)
+                popLabel();
+            zero_state = false;
             appendLabel(btn->text());
             break;
 
@@ -337,11 +347,18 @@ void MainWindow:: numClick() {
             break;
 
         case IMAG_NO_NUMBER:
+            if (btn->text() == "0")
+                zero_state = true;
             appendLabel(btn->text());
             nextState();
             break;
 
         case IMAG_PART:
+            if (zero_state && btn->text() == "0")
+                break;
+            else if (zero_state)
+                popLabel();
+            zero_state = false;
             appendLabel(btn->text());
             break;
 
@@ -368,6 +385,10 @@ void MainWindow::on_btn_plus_clicked() {
         appendLabel("+");
     }
     else if (state == REAL_DOT_PART) {
+        while (peekLabel() == '0')
+            popLabel();
+        if (peekLabel() == '.')
+            popLabel();
         nextState();
         appendLabel("+");
     }
@@ -395,6 +416,10 @@ void MainWindow::on_btn_minus_clicked() {
     }
 
     else if (state == REAL_DOT_PART) {
+        while (peekLabel() == '0')
+            popLabel();
+        if (peekLabel() == '.')
+            popLabel();
         nextState();
         appendLabel("-");
     }
@@ -439,6 +464,10 @@ void MainWindow::on_btn_i_clicked() {
     }
 
     else if (state == IMAG_DOT_PART) {
+        while (peekLabel() == '0')
+            popLabel();
+        if (peekLabel() == '.')
+            popLabel();
         nextState();
         appendLabel("i");
     }
@@ -495,12 +524,28 @@ void MainWindow::on_btn_delete_clicked() {
             break;
 
         case REAL_DOT_PART:
-            if (peekLabel() == ".")
+            if (ui->lbl_number->text().length() == 0) {
                 prevState();
+                prevState();
+                prevState();
+                prevState();
+            }
+            else if (peekLabel() == ".")
+                prevState();
+            else if (peekLabel() == "-") {
+                prevState();
+                prevState();
+                prevState();
+            }
+
             break;
 
         case IMAG_NO_NUMBER:
                 prevState();
+                if (ui->lbl_number->text().indexOf('.') == -1) {
+                    prevState();
+                    prevState();
+                }
             break;
 
         case IMAG_PART:
@@ -515,19 +560,37 @@ void MainWindow::on_btn_delete_clicked() {
         case IMAG_DOT_PART:
             if (peekLabel() == ".")
                 prevState();
+            else if (peekLabel() == "-" || peekLabel() == "+") {
+                prevState();
+                prevState();
+                prevState();
+            }
             break;
 
         case NEXT_COMPLEX_OP:
             prevState();
+            if (ui->lbl_number->text().indexOf('.') == -1
+                     || ((ui->lbl_number->text().count('.') == 1) && ((ui->lbl_number->text().indexOf('+') < ui->lbl_number->text().indexOf('.'))))
+                     || ((ui->lbl_number->text().count('.') == 1) && ((ui->lbl_number->text().indexOf('-') < ui->lbl_number->text().indexOf('.'))))) {
+                prevState();
+                prevState();
+            }
             break;
 
         case EQUALITY:
             prevState();
+            if (ui->lbl_number->text().indexOf('.') == -1
+                     || ((ui->lbl_number->text().count('.') == 1) && ((ui->lbl_number->text().indexOf('+') < ui->lbl_number->text().indexOf('.'))))
+                     || ((ui->lbl_number->text().count('.') == 1) && ((ui->lbl_number->text().indexOf('-') < ui->lbl_number->text().indexOf('.'))))) {
+                prevState();
+                prevState();
+            }
             break;
 
         default:
             qDebug() << "Unknown state to delete value";
     }
+
 }
 
 
