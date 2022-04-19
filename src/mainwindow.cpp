@@ -36,21 +36,79 @@ void MainWindow::calculateComplex() {
     QString first_sign = "+";
     QString second_sign = "+";
 
-    auto pos_first = first_str.lastIndexOf('+');
-    if (pos_first ==-1) {
-        pos_first = first_str.lastIndexOf('-');
-        first_sign = "-";
+    auto pos_first = first_str.indexOf('+');
+    auto pos_second = second_str.indexOf('+');
+
+    if (first_str.indexOf('e') != -1) {
+        if (first_str.count('e') == 2) {
+            pos_first = first_str.indexOf('+', first_str.indexOf('e') + 2);
+            if (pos_first == -1) {
+                pos_first = first_str.indexOf('-', first_str.indexOf('e') + 2);
+                first_sign = "-";
+            }
+        }
+        else {
+            if (first_str.indexOf('+', first_str.indexOf('e') + 2) == -1 && first_str.indexOf('-', first_str.indexOf('e') + 2) == -1) {
+                if (pos_first == -1) {
+                    pos_first = first_str.indexOf('-');
+                    first_sign = "-";
+                }
+            }
+            else {
+                pos_first = first_str.indexOf('+', first_str.indexOf('e') + 2);
+                if (pos_first == -1) {
+                    pos_first = first_str.indexOf('-', first_str.indexOf('e') + 2);
+                    first_sign = "-";
+                }
+            }
+        }
     }
-    auto pos_second = second_str.lastIndexOf('+');
-    if (pos_second == -1) {
-        pos_second = second_str.lastIndexOf('-');
-        second_sign = "-";
+    else {
+        if (pos_first == -1) {
+            pos_first = first_str.indexOf('-');
+            first_sign = "-";
+        }
     }
+
+
+    if (second_str.indexOf('e') != -1) {
+        if (second_str.count('e') == 2) {
+            pos_second = second_str.indexOf('+', second_str.indexOf('e') + 2);
+            if (pos_second == -1) {
+                pos_second = second_str.indexOf('-', second_str.indexOf('e') + 2);
+                second_sign = "-";
+            }
+        }
+        else {
+            if (second_str.indexOf('+', second_str.indexOf('e') + 2) == -1 && second_str.indexOf('-', second_str.indexOf('e') + 2) == -1) {
+                if (pos_second == -1) {
+                    pos_second = second_str.indexOf('-');
+                    second_sign = "-";
+                }
+            }
+            else {
+                pos_second = second_str.indexOf('+', second_str.indexOf('e') + 2);
+                if (pos_second == -1) {
+                    pos_second = second_str.indexOf('-', second_str.indexOf('e') + 2);
+                    second_sign = "-";
+                }
+            }
+        }
+    }
+    else {
+        if (pos_second == -1) {
+            pos_second = second_str.indexOf('-');
+            second_sign = "-";
+        }
+    }
+
     first_complex.real(first_str.left(pos_first).toDouble());
     first_complex.imag(first_str.mid(pos_first + (first_sign=="+"?1:0), first_str.length() - pos_first - 1 - (first_sign=="+"?1:0)).toDouble());
 
     second_complex.real(second_str.left(pos_second).toDouble());
     second_complex.imag(second_str.mid(pos_second + (second_sign=="+"?1:0), second_str.length() - pos_second - 1 - (second_sign=="+"?1:0)).toDouble());
+
+    qDebug() << first_complex.real() << first_complex.imag() << second_complex.real() << second_complex.imag();
 
 
     switch (op) {
@@ -75,13 +133,15 @@ void MainWindow::calculateComplex() {
 
     }
 
-    if (QString::number(first_complex.real()) == "nan" || QString::number(first_complex.imag()) == "nan") {
+    if (QString::number(first_complex.real()) == "nan" || QString::number(first_complex.imag()) == "nan"
+            || QString::number(first_complex.real()) == "inf" || QString::number(first_complex.imag()) == "inf") {
         state = ERROR;
         ui->lbl_number->setText("ZeroDivision Error!");
         switchButtonsState();
     }
     else {
-        first_str = QString::number(first_complex.real()) + (first_complex.imag()<0?"":"+") + QString::number(first_complex.imag()) + "i";
+        first_str = QString::number(QString::number(first_complex.real()).toFloat()) + (first_complex.imag()<0?"":"+")
+                + QString::number(QString::number(first_complex.imag()).toFloat()) + "i";
         ui->lbl_number->setText(first_str);
     }
 }
@@ -104,6 +164,7 @@ void MainWindow::switchButtonsState() {
             ui->btn_delete->setEnabled(false);
             ui->btn_equal->setEnabled(false);
             ui->btn_dot->setEnabled(false);
+            zero_state = false;
             break;
 
         case ONLY_REAL_SIGN:
@@ -311,19 +372,30 @@ void MainWindow::prevState() {
 void MainWindow:: numClick() {
     QPushButton *btn = (QPushButton *) sender();
 
+    if (ui->lbl_number->text().length() == MAX_LEN)
+        return;
+
     switch (state) {
         case REAL_NO_NUMBER:
             ui->lbl_number->setText(btn->text());
+            if (btn->text() == "0")
+                zero_state = true;
             nextState();
             nextState();
             break;
 
         case ONLY_REAL_SIGN:
+            if (btn->text() == "0")
+                zero_state = true;
             nextState();
             appendLabel(btn->text());
             break;
 
         case REAL_PART:
+            if (zero_state && btn->text() == "0")
+                break;
+            else if (zero_state)
+                popLabel();
             appendLabel(btn->text());
             break;
 
@@ -337,11 +409,19 @@ void MainWindow:: numClick() {
             break;
 
         case IMAG_NO_NUMBER:
+            zero_state = false;
+            if (btn->text() == "0")
+                zero_state = true;
             appendLabel(btn->text());
             nextState();
             break;
 
         case IMAG_PART:
+            if (zero_state && btn->text() == "0")
+                break;
+            else if (zero_state)
+                popLabel();
+            zero_state = false;
             appendLabel(btn->text());
             break;
 
@@ -362,12 +442,20 @@ void MainWindow:: numClick() {
 
 void MainWindow::on_btn_plus_clicked() {
     if (state == REAL_PART) {
+        if (ui->lbl_number->text().length() == MAX_LEN)
+            return;
         nextState();
         nextState();
         nextState();
         appendLabel("+");
     }
     else if (state == REAL_DOT_PART) {
+        while (peekLabel() == '0')
+            popLabel();
+        if (peekLabel() == '.')
+            popLabel();
+        if (ui->lbl_number->text().length() == MAX_LEN)
+            return;
         nextState();
         appendLabel("+");
     }
@@ -388,6 +476,8 @@ void MainWindow::on_btn_minus_clicked() {
     }
 
     else if (state == REAL_PART) {
+        if (ui->lbl_number->text().length() == MAX_LEN)
+            return;
         nextState();
         nextState();
         nextState();
@@ -395,6 +485,12 @@ void MainWindow::on_btn_minus_clicked() {
     }
 
     else if (state == REAL_DOT_PART) {
+        if (ui->lbl_number->text().length() == MAX_LEN)
+            return;
+        while (peekLabel() == '0')
+            popLabel();
+        if (peekLabel() == '.')
+            popLabel();
         nextState();
         appendLabel("-");
     }
@@ -432,6 +528,8 @@ void MainWindow::on_btn_divide_clicked() {
 
 void MainWindow::on_btn_i_clicked() {
     if (state == IMAG_PART) {
+        if (ui->lbl_number->text().length() == MAX_LEN)
+            return;
         nextState();
         nextState();
         nextState();
@@ -439,6 +537,12 @@ void MainWindow::on_btn_i_clicked() {
     }
 
     else if (state == IMAG_DOT_PART) {
+        while (peekLabel() == '0')
+            popLabel();
+        if (peekLabel() == '.')
+            popLabel();
+        if (ui->lbl_number->text().length() == MAX_LEN)
+            return;
         nextState();
         appendLabel("i");
     }
@@ -446,11 +550,15 @@ void MainWindow::on_btn_i_clicked() {
 
 void MainWindow::on_btn_dot_clicked() {
     if (state == REAL_PART) {
+        if (ui->lbl_number->text().length() == MAX_LEN)
+            return;
         appendLabel(".");
         nextState();
     }
 
     else if (state == IMAG_PART) {
+        if (ui->lbl_number->text().length() == MAX_LEN)
+            return;
         appendLabel(".");
         nextState();
     }
@@ -495,12 +603,28 @@ void MainWindow::on_btn_delete_clicked() {
             break;
 
         case REAL_DOT_PART:
-            if (peekLabel() == ".")
+            if (ui->lbl_number->text().length() == 0) {
                 prevState();
+                prevState();
+                prevState();
+                prevState();
+            }
+            else if (peekLabel() == ".")
+                prevState();
+            else if (peekLabel() == "-") {
+                prevState();
+                prevState();
+                prevState();
+            }
+
             break;
 
         case IMAG_NO_NUMBER:
                 prevState();
+                if (ui->lbl_number->text().indexOf('.') == -1) {
+                    prevState();
+                    prevState();
+                }
             break;
 
         case IMAG_PART:
@@ -515,19 +639,37 @@ void MainWindow::on_btn_delete_clicked() {
         case IMAG_DOT_PART:
             if (peekLabel() == ".")
                 prevState();
+            else if (peekLabel() == "-" || peekLabel() == "+") {
+                prevState();
+                prevState();
+                prevState();
+            }
             break;
 
         case NEXT_COMPLEX_OP:
             prevState();
+            if (ui->lbl_number->text().indexOf('.') == -1
+                     || ((ui->lbl_number->text().count('.') == 1) && ((ui->lbl_number->text().indexOf('+') < ui->lbl_number->text().indexOf('.'))))
+                     || ((ui->lbl_number->text().count('.') == 1) && ((ui->lbl_number->text().indexOf('-') < ui->lbl_number->text().indexOf('.'))))) {
+                prevState();
+                prevState();
+            }
             break;
 
         case EQUALITY:
             prevState();
+            if (ui->lbl_number->text().indexOf('.') == -1
+                     || ((ui->lbl_number->text().count('.') == 1) && ((ui->lbl_number->text().indexOf('+') < ui->lbl_number->text().indexOf('.'))))
+                     || ((ui->lbl_number->text().count('.') == 1) && ((ui->lbl_number->text().indexOf('-') < ui->lbl_number->text().indexOf('.'))))) {
+                prevState();
+                prevState();
+            }
             break;
 
         default:
             qDebug() << "Unknown state to delete value";
     }
+
 }
 
 

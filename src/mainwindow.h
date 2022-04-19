@@ -7,6 +7,8 @@
 #include <QVector>
 #include <QPushButton>
 
+#define MAX_LEN 37
+
 enum equationState {REAL_NO_NUMBER, ONLY_REAL_SIGN,
                     REAL_PART, REAL_DOT_NO_NUMBER, REAL_DOT_PART,
                     IMAG_NO_NUMBER,
@@ -55,6 +57,7 @@ private:
     std::complex<double> first_complex, second_complex;
 
     bool is_first;
+    bool zero_state;
 
     void appendLabel(QString str);
     void popLabel();
