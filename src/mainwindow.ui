@@ -32,7 +32,7 @@
    <string>Complex Calculator</string>
   </property>
   <property name="windowIcon">
-   <iconset>
+   <iconset resource="resouces/res.qrc">
     <normaloff>:/logo/logo.ico</normaloff>:/logo/logo.ico</iconset>
   </property>
   <property name="styleSheet">
@@ -88,6 +88,9 @@
        </property>
        <property name="text">
         <string>0</string>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::TextSelectableByMouse</set>
        </property>
       </widget>
      </item>
@@ -776,6 +779,8 @@
    </widget>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="resouces/res.qrc"/>
+ </resources>
  <connections/>
 </ui>
