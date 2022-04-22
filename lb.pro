@@ -11,6 +11,7 @@ SOURCES += \
     src/mainwindow.cpp
 
 HEADERS += \
+    src/complex.h \
     src/mainwindow.h
 
 FORMS += \
