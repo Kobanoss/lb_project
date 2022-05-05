@@ -2,10 +2,12 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <complex>
 #include <QDebug>
 #include <QVector>
 #include <QPushButton>
+#include "complex.h"
+
+#define MAX_LEN 35
 
 enum equationState {REAL_NO_NUMBER, ONLY_REAL_SIGN,
                     REAL_PART, REAL_DOT_NO_NUMBER, REAL_DOT_PART,
@@ -52,13 +54,15 @@ private:
     operation op;
 
     QString first_str, second_str;
-    std::complex<double> first_complex, second_complex;
 
     bool is_first;
+    bool zero_state;
 
     void appendLabel(QString str);
     void popLabel();
     QString peekLabel();
+
+    void removeZeros(QString& str);
 
     void numClick();
 
