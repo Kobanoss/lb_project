@@ -38,30 +38,31 @@ void MainWindow::removeZeros(QString& str) {
 
 void MainWindow::calculateComplex() {
 
-    complex first_complex = {first_str.toStdString()};
-    complex second_complex = {second_str.toStdString()};
+    complex first_complex = complex(first_str.toStdString());
+    complex second_complex = complex(second_str.toStdString());
 
     switch (op) {
         case PLUS:
-            first_complex = first_complex + second_complex;
+            first_complex = first_complex + &second_complex;
             break;
 
         case MINUS:
-            first_complex = first_complex - second_complex;
+            first_complex = first_complex - &second_complex;
             break;
 
         case MUL:
-            first_complex = first_complex * second_complex;
+            first_complex = first_complex * &second_complex;
             break;
 
         case DIV:
-            first_complex = first_complex / second_complex;
+            first_complex = first_complex / &second_complex;
             break;
 
     default:
         qDebug() << "Unknown operator?";
 
     }
+
 
     if (QString::number(first_complex.getReal()) == "nan" || QString::number(first_complex.getImag()) == "nan"
             || QString::number(first_complex.getReal()) == "inf" || QString::number(first_complex.getImag()) == "inf") {
@@ -78,6 +79,7 @@ void MainWindow::calculateComplex() {
     removeZeros(ans_imag);
 
     first_str = ans_real + (first_complex.getImag()<0?"":"+") + ans_imag + "i";
+
 
     if (first_str.indexOf("inf") != -1 || first_str.length() > (MAX_LEN)) {
         state = ERROR;
